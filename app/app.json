@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Golf Go",
+    "slug": "golf-go",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a5f3b"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.golfgo.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We need your location to measure distances and track shots on the golf course.",
+        "NSLocationAlwaysUsageDescription": "We need your location to provide real-time yardages during your round.",
+        "UIBackgroundModes": ["location"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a5f3b"
+      },
+      "package": "com.golfgo.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Golf Go to use your location to measure distances and track shots."
+        }
+      ]
+    ]
+  }
+}

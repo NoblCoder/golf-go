@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  rounds    Round[]
+  clubs     Club[]
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  name        String
+  location    String?
+  description String?
+  par         Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  holes       Hole[]
+  rounds      Round[]
+}
+
+model Hole {
+  id             String   @id @default(uuid())
+  courseId       String
+  holeNumber     Int
+  par            Int
+  distance       Int      // Yards from back tees
+  handicap       Int?
+  
+  // GPS Coordinates
+  pinLat         Float
+  pinLng         Float
+  
+  // Tee box polygon (JSON array of [lat, lng] pairs)
+  teeBoxPolygon  String?
+  
+  // Fairway polygon (JSON array of [lat, lng] pairs)
+  fairwayPolygon String?
+  
+  // Green polygon (JSON array of [lat, lng] pairs)
+  greenPolygon   String?
+  
+  // Elevation data
+  teeElevation   Float?
+  greenElevation Float?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  course         Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  roundHoles     RoundHole[]
+  
+  @@unique([courseId, holeNumber])
+  @@index([courseId])
+}
+
+model Round {
+  id           String     @id @default(uuid())
+  userId       String
+  courseId     String
+  startedAt    DateTime   @default(now())
+  completedAt  DateTime?
+  totalScore   Int?
+  weather      String?
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course       Course     @relation(fields: [courseId], references: [id])
+  roundHoles   RoundHole[]
+  shots        Shot[]
+  
+  @@index([userId])
+  @@index([courseId])
+  @@index([startedAt])
+}
+
+model RoundHole {
+  id              String    @id @default(uuid())
+  roundId         String
+  holeId          String
+  holeNumber      Int
+  score           Int?
+  putts           Int?
+  fairwayHit      Boolean?
+  greenInReg      Boolean?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  round           Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  hole            Hole      @relation(fields: [holeId], references: [id])
+  
+  @@unique([roundId, holeNumber])
+  @@index([roundId])
+}
+
+model Shot {
+  id              String   @id @default(uuid())
+  roundId         String
+  holeNumber      Int
+  clubId          String?
+  
+  // Start position
+  startLat        Float
+  startLng        Float
+  startElevation  Float?
+  startAccuracy   Float?   // GPS accuracy in meters
+  startTimestamp  DateTime
+  
+  // End position
+  endLat          Float
+  endLng          Float
+  endElevation    Float?
+  endAccuracy     Float?
+  endTimestamp    DateTime
+  
+  // Computed metrics
+  carryDistance   Float?   // Meters
+  totalDistance   Float?   // Meters
+  lateralDist     Float?   // Left/Right in meters (negative = left)
+  elevationChange Float?   // Meters
+  
+  // Shot metadata
+  shotType        String?  // "drive", "approach", "chip", "putt", "recovery"
+  shotTag         String?  // "stinger", "punch", "flop", etc.
+  notes           String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  round           Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  club            Club?    @relation(fields: [clubId], references: [id])
+  
+  @@index([roundId])
+  @@index([clubId])
+  @@index([holeNumber])
+}
+
+model Club {
+  id            String   @id @default(uuid())
+  userId        String
+  name          String   // "Driver", "7 Iron", "60° Wedge"
+  type          String   // "driver", "wood", "hybrid", "iron", "wedge", "putter"
+  loft          Float?   // Degrees
+  brand         String?
+  model         String?
+  
+  // Practice mode stats
+  avgDistance   Float?   // Meters
+  stdDeviation  Float?   // Consistency
+  totalShots    Int      @default(0)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shots         Shot[]
+  
+  @@index([userId])
+}
