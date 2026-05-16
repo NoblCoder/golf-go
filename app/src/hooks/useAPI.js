@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { DEMO_USER_ID } from "../constants";
 
 // Configure base URL from environment
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
@@ -65,7 +66,7 @@ export function useCreateRound() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ courseId, userId = 1 }) => {
+    mutationFn: async ({ courseId, userId = DEMO_USER_ID }) => {
       const { data } = await api.post("/rounds", { courseId, userId });
       return data;
     },
@@ -171,11 +172,11 @@ export function useDeleteShot() {
 // CLUBS
 // ============================================================================
 
-export function useClubs() {
+export function useClubs(userId = DEMO_USER_ID) {
   return useQuery({
-    queryKey: ["clubs"],
+    queryKey: ["clubs", userId],
     queryFn: async () => {
-      const { data } = await api.get("/clubs");
+      const { data } = await api.get("/clubs", { params: { userId } });
       return data;
     },
   });

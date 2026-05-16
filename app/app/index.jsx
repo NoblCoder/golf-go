@@ -13,7 +13,7 @@ export default function Index() {
       <Text style={styles.subtitle}>Your GPS Golf Companion</Text>
 
       <View style={styles.buttonContainer}>
-        <Link href='/play' asChild>
+        <Link href='/courses' asChild>
           <TouchableOpacity style={styles.primaryButton}>
             <Text style={styles.primaryButtonText}>Play Round</Text>
           </TouchableOpacity>

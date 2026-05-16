@@ -1,7 +1,7 @@
 /** @format */
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import { gpsEngine } from "../services/gps/GPSEngine";
 
 const GPSContext = createContext(null);
@@ -14,6 +14,13 @@ export function GPSProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Skip GPS on web platform
+    if (Platform.OS === "web") {
+      setIsReady(false);
+      setError("GPS not available on web");
+      return;
+    }
+
     let unsubscribe;
 
     async function init() {

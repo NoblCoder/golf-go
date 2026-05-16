@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useGPS } from "../src/context/GPSProvider";
@@ -65,7 +66,8 @@ export default function PlayModeScreen() {
     );
   }
 
-  if (!gpsReady) {
+  // Skip GPS check on web platform
+  if (Platform.OS !== "web" && !gpsReady) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size='large' color='#2d7a4a' />
@@ -75,7 +77,7 @@ export default function PlayModeScreen() {
   }
 
   const currentHole = course.holes[currentHoleIndex];
-  const currentScore = scores[currentHole.number] || currentHole.par;
+  const currentScore = scores[currentHole.holeNumber] || currentHole.par;
 
   // Calculate distances to green
   const distances =
@@ -89,11 +91,11 @@ export default function PlayModeScreen() {
       : 0;
 
   const handleScoreChange = (newScore) => {
-    setScores((prev) => ({ ...prev, [currentHole.number]: newScore }));
+    setScores((prev) => ({ ...prev, [currentHole.holeNumber]: newScore }));
 
     if (roundId) {
       updateHoleScore.mutate({
-        holeNumber: currentHole.number,
+        holeNumber: currentHole.holeNumber,
         strokes: newScore,
         putts: 0, // Would need putt tracking
       });
@@ -134,13 +136,13 @@ export default function PlayModeScreen() {
       <View style={styles.holeInfo}>
         <Text style={styles.courseName}>{course.name}</Text>
         <Text style={styles.holeName}>
-          {currentHole.name || `Hole ${currentHole.number}`}
+          {currentHole.name || `Hole ${currentHole.holeNumber}`}
         </Text>
       </View>
 
       {/* Hole Navigation */}
       <HoleNavigation
-        currentHole={currentHole.number}
+        currentHole={currentHole.holeNumber}
         totalHoles={course.holes.length}
         onPrevious={handlePrevHole}
         onNext={handleNextHole}

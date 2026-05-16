@@ -9,11 +9,13 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  Platform,
 } from "react-native";
 import { useGPS } from "../src/context/GPSProvider";
 import { useShotTracking } from "../src/context/ShotTrackingProvider";
 import { useClubs, useCreateClub, useClubAnalytics } from "../src/hooks/useAPI";
 import { metersToYards } from "../src/services/gps/distanceUtils";
+import { DEMO_USER_ID } from "../src/constants";
 import ShotButton from "../src/components/ShotButton";
 
 /**
@@ -33,7 +35,7 @@ export default function PracticeModeScreen() {
   const handleAddClub = () => {
     if (newClubName.trim()) {
       createClub.mutate(
-        { name: newClubName.trim(), userId: 1 },
+        { name: newClubName.trim(), userId: DEMO_USER_ID },
         {
           onSuccess: () => {
             setNewClubName("");
@@ -79,7 +81,8 @@ export default function PracticeModeScreen() {
         clubShots.length
       : 0;
 
-  if (!gpsReady) {
+  // Skip GPS check on web platform
+  if (Platform.OS !== "web" && !gpsReady) {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingText}>Acquiring GPS...</Text>
