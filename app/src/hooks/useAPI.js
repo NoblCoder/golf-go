@@ -16,11 +16,16 @@ const api = axios.create({
 // COURSES
 // ============================================================================
 
-export function useCourses() {
+export function useCourses(userLocation) {
   return useQuery({
-    queryKey: ["courses"],
+    queryKey: ["courses", userLocation],
     queryFn: async () => {
-      const { data } = await api.get("/courses");
+      const params = {};
+      if (userLocation?.latitude && userLocation?.longitude) {
+        params.lat = userLocation.latitude;
+        params.lng = userLocation.longitude;
+      }
+      const { data } = await api.get("/courses", { params });
       return data;
     },
   });
@@ -80,9 +85,9 @@ export function useUpdateHoleScore(roundId) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ holeNumber, strokes, putts }) => {
+    mutationFn: async ({ holeNumber, score, putts }) => {
       const { data } = await api.put(`/rounds/${roundId}/holes/${holeNumber}`, {
-        strokes,
+        score,
         putts,
       });
       return data;

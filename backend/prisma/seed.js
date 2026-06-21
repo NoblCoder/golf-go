@@ -364,6 +364,8 @@ async function main() {
         location: courseData.location,
         description: courseData.description,
         par: courseData.par,
+        latitude: courseData.baseLat,
+        longitude: courseData.baseLng,
         holes: {
           create: holes,
         },
