@@ -2,19 +2,49 @@
 
 const express = require("express");
 const prisma = require("../prisma");
+const { calculateDistance } = require("../utils/distanceCalculator");
 
 const router = express.Router();
 
 // GET all courses
 router.get("/", async (req, res) => {
   try {
-    const courses = await prisma.course.findMany({
+    const { lat, lng } = req.query;
+
+    let courses = await prisma.course.findMany({
       include: {
         holes: {
           orderBy: { holeNumber: "asc" },
         },
       },
     });
+
+    // Calculate distance from user location if provided
+    if (lat && lng) {
+      const userLat = parseFloat(lat);
+      const userLng = parseFloat(lng);
+
+      courses = courses.map((course) => {
+        if (course.latitude && course.longitude) {
+          const distance = calculateDistance(
+            userLat,
+            userLng,
+            course.latitude,
+            course.longitude,
+          );
+          return { ...course, distance };
+        }
+        return course;
+      });
+
+      // Sort by distance (closest first)
+      courses.sort((a, b) => {
+        if (!a.distance) return 1;
+        if (!b.distance) return -1;
+        return a.distance - b.distance;
+      });
+    }
+
     res.json(courses);
   } catch (error) {
     res.status(500).json({ error: error.message });

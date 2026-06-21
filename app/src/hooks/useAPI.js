@@ -16,11 +16,16 @@ const api = axios.create({
 // COURSES
 // ============================================================================
 
-export function useCourses() {
+export function useCourses(userLocation) {
   return useQuery({
-    queryKey: ["courses"],
+    queryKey: ["courses", userLocation],
     queryFn: async () => {
-      const { data } = await api.get("/courses");
+      const params = {};
+      if (userLocation?.latitude && userLocation?.longitude) {
+        params.lat = userLocation.latitude;
+        params.lng = userLocation.longitude;
+      }
+      const { data } = await api.get("/courses", { params });
       return data;
     },
   });
