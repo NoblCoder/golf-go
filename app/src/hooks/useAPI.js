@@ -80,9 +80,9 @@ export function useUpdateHoleScore(roundId) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ holeNumber, strokes, putts }) => {
+    mutationFn: async ({ holeNumber, score, putts }) => {
       const { data } = await api.put(`/rounds/${roundId}/holes/${holeNumber}`, {
-        strokes,
+        score,
         putts,
       });
       return data;

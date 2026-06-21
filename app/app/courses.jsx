@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Link } from "expo-router";
 import { useCourses } from "../src/hooks/useAPI";
@@ -20,6 +21,7 @@ export default function CoursesScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
+        <ActivityIndicator size='large' color='#2d7a4a' />
         <Text style={styles.loadingText}>Loading courses...</Text>
       </View>
     );
@@ -39,11 +41,11 @@ export default function CoursesScreen() {
           asChild>
           <TouchableOpacity style={styles.courseCard}>
             <Text style={styles.courseName}>{course.name}</Text>
-            <Text style={styles.courseDetails}>
-              {course.city}, {course.state}
-            </Text>
+            {course.location && (
+              <Text style={styles.courseDetails}>{course.location}</Text>
+            )}
             <Text style={styles.courseHoles}>
-              {course.holes?.length || 18} holes
+              {course.holes?.length || 18} holes{course.par ? ` · Par ${course.par}` : ""}
             </Text>
           </TouchableOpacity>
         </Link>
