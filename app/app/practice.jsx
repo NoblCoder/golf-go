@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  ActivityIndicator,
   Platform,
 } from "react-native";
 import { useGPS } from "../src/context/GPSProvider";
@@ -31,14 +32,25 @@ export default function PracticeModeScreen() {
   const [selectedClubId, setSelectedClubId] = useState(null);
   const [showAddClub, setShowAddClub] = useState(false);
   const [newClubName, setNewClubName] = useState("");
+  const [newClubType, setNewClubType] = useState("iron");
+
+  const CLUB_TYPES = [
+    { value: "driver", label: "Driver" },
+    { value: "wood", label: "Wood" },
+    { value: "hybrid", label: "Hybrid" },
+    { value: "iron", label: "Iron" },
+    { value: "wedge", label: "Wedge" },
+    { value: "putter", label: "Putter" },
+  ];
 
   const handleAddClub = () => {
     if (newClubName.trim()) {
       createClub.mutate(
-        { name: newClubName.trim(), userId: DEMO_USER_ID },
+        { name: newClubName.trim(), type: newClubType, userId: DEMO_USER_ID },
         {
           onSuccess: () => {
             setNewClubName("");
+            setNewClubType("iron");
             setShowAddClub(false);
           },
         },
@@ -85,6 +97,7 @@ export default function PracticeModeScreen() {
   if (Platform.OS !== "web" && !gpsReady) {
     return (
       <View style={styles.loadingContainer}>
+        <ActivityIndicator size='large' color='#2d7a4a' />
         <Text style={styles.loadingText}>Acquiring GPS...</Text>
       </View>
     );
@@ -204,6 +217,29 @@ export default function PracticeModeScreen() {
               onChangeText={setNewClubName}
               autoFocus
             />
+            <Text style={styles.typeLabel}>TYPE</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.typeList}>
+              {CLUB_TYPES.map((t) => (
+                <TouchableOpacity
+                  key={t.value}
+                  style={[
+                    styles.typeButton,
+                    newClubType === t.value && styles.typeButtonActive,
+                  ]}
+                  onPress={() => setNewClubType(t.value)}>
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      newClubType === t.value && styles.typeButtonTextActive,
+                    ]}>
+                    {t.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.modalButton}
@@ -413,6 +449,36 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   modalButtonTextPrimary: {
+    color: "#fff",
+  },
+  typeLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#a0d9b4",
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  typeList: {
+    gap: 8,
+    paddingBottom: 16,
+  },
+  typeButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    backgroundColor: "#0d2818",
+    borderWidth: 1,
+    borderColor: "#2d7a4a",
+  },
+  typeButtonActive: {
+    backgroundColor: "#2d7a4a",
+  },
+  typeButtonText: {
+    color: "#a0d9b4",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  typeButtonTextActive: {
     color: "#fff",
   },
 });

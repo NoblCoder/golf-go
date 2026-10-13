@@ -1,12 +1,13 @@
 /** @format */
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  TouchableOpacity,
   Platform,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
@@ -16,6 +17,7 @@ import {
   useCourse,
   useCreateRound,
   useUpdateHoleScore,
+  useCompleteRound,
 } from "../src/hooks/useAPI";
 import { calculateGreenDistances } from "../src/services/gps/distanceUtils";
 import YardageDisplay from "../src/components/YardageDisplay";
@@ -39,23 +41,28 @@ export default function PlayModeScreen() {
   const [currentHoleIndex, setCurrentHoleIndex] = useState(0);
   const [roundId, setRoundId] = useState(null);
   const [scores, setScores] = useState({});
+  const [roundCompleted, setRoundCompleted] = useState(false);
 
   const updateHoleScore = useUpdateHoleScore(roundId);
+  const completeRound = useCompleteRound(roundId);
 
-  // Initialize round
-  useEffect(() => {
+  // Initialize round - stable callback prevents duplicate creation
+  const initRound = useCallback(() => {
     if (course && !roundId) {
       createRound.mutate(
         { courseId: course.id },
         {
           onSuccess: (data) => {
             setRoundId(data.id);
-            console.log("[PlayMode] Round started:", data.id);
           },
         },
       );
     }
-  }, [course, roundId]);
+  }, [course, roundId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    initRound();
+  }, [initRound]);
 
   if (courseLoading || !course) {
     return (
@@ -96,10 +103,18 @@ export default function PlayModeScreen() {
     if (roundId) {
       updateHoleScore.mutate({
         holeNumber: currentHole.holeNumber,
-        strokes: newScore,
-        putts: 0, // Would need putt tracking
+        score: newScore,
+        putts: 0,
       });
     }
+  };
+
+  const handleCompleteRound = () => {
+    if (!roundId) return;
+    completeRound.mutate(undefined, {
+      onSuccess: () => setRoundCompleted(true),
+      onError: (error) => alert(error.message),
+    });
   };
 
   const handleStartShot = () => {
@@ -160,7 +175,7 @@ export default function PlayModeScreen() {
 
       {/* Shot Tracking */}
       <View style={styles.shotSection}>
-        <Text style={styles.sectionLabel}>PRACTICE SHOT TRACKING</Text>
+        <Text style={styles.sectionLabel}>SHOT TRACKING</Text>
         <ShotButton
           isTracking={isTracking}
           onStart={handleStartShot}
@@ -169,6 +184,24 @@ export default function PlayModeScreen() {
           accuracy={location?.accuracy}
         />
       </View>
+
+      {/* Complete Round */}
+      {roundId && !roundCompleted && (
+        <TouchableOpacity
+          style={styles.completeButton}
+          onPress={handleCompleteRound}
+          disabled={completeRound.isPending}>
+          <Text style={styles.completeButtonText}>
+            {completeRound.isPending ? "Saving..." : "Complete Round"}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {roundCompleted && (
+        <View style={styles.completedBanner}>
+          <Text style={styles.completedText}>🏆 Round Complete!</Text>
+        </View>
+      )}
 
       {/* GPS Status */}
       <View style={styles.statusBar}>
@@ -241,5 +274,30 @@ const styles = StyleSheet.create({
     color: "#a0d9b4",
     fontSize: 12,
     fontWeight: "600",
+  },
+  completeButton: {
+    backgroundColor: "#1a472a",
+    borderWidth: 2,
+    borderColor: "#2d7a4a",
+    borderRadius: 12,
+    padding: 18,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  completeButtonText: {
+    color: "#a0d9b4",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  completedBanner: {
+    backgroundColor: "#2d7a4a",
+    borderRadius: 12,
+    padding: 18,
+    alignItems: "center",
+  },
+  completedText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
   },
 });

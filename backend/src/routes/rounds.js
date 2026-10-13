@@ -1,10 +1,9 @@
 /** @format */
 
 const express = require("express");
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../prisma");
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET all rounds for a user
 router.get("/", async (req, res) => {
@@ -124,8 +123,8 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// PATCH update hole score
-router.patch("/:roundId/holes/:holeNumber", async (req, res) => {
+// PUT update hole score
+router.put("/:roundId/holes/:holeNumber", async (req, res) => {
   try {
     const { roundId, holeNumber } = req.params;
     const { score, putts, fairwayHit, greenInReg, completedAt } = req.body;
@@ -160,6 +159,39 @@ router.patch("/:roundId/holes/:holeNumber", async (req, res) => {
     });
 
     res.json(roundHole);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// POST complete a round
+router.post("/:id/complete", async (req, res) => {
+  try {
+    const allHoles = await prisma.roundHole.findMany({
+      where: { roundId: req.params.id },
+    });
+
+    const totalScore = allHoles.reduce(
+      (sum, hole) => sum + (hole.score || 0),
+      0,
+    );
+
+    const round = await prisma.round.update({
+      where: { id: req.params.id },
+      data: {
+        completedAt: new Date(),
+        totalScore,
+      },
+      include: {
+        course: true,
+        roundHoles: {
+          orderBy: { holeNumber: "asc" },
+          include: { hole: true },
+        },
+      },
+    });
+
+    res.json(round);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

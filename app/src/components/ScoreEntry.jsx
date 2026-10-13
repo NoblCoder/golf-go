@@ -6,7 +6,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
  * Score entry with +/- buttons
  */
 export default function ScoreEntry({ currentScore, par, onScoreChange }) {
-  const increment = () => onScoreChange(currentScore + 1);
+  const increment = () => onScoreChange(Math.min(15, currentScore + 1));
   const decrement = () => onScoreChange(Math.max(1, currentScore - 1));
 
   const getScoreColor = () => {
